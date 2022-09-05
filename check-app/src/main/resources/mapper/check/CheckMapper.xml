@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.boomlabs.checkapp.mapper.CheckMapper">
+
+    <select id="selectUserByDiscordId" parameterType="String" resultType="com.boomlabs.checkapp.model.User" >
+        SELECT
+            user_id,
+            user_address,
+            discord_channel_id,
+            discord_id
+        FROM users
+        WHERE
+            discord_id = #{discordId}
+    </select>
+
+    <select id="existsCheck" parameterType="com.boomlabs.checkapp.model.User" resultType="int">
+        SELECT EXISTS (
+            SELECT
+                user_id
+            FROM
+                users
+            WHERE discord_id = #{discordId}
+            AND user_address = #{userAddress}
+            AND discord_channel_id = #{discordChannelId}
+        ) already;
+    </select>
+
+    <select id="existsUser" parameterType="com.boomlabs.checkapp.model.User" resultType="int" >
+        SELECT EXISTS (
+            SELECT
+                user_id
+            FROM
+                users
+            WHERE discord_id = #{discordId}
+            AND discord_channel_id = #{discordChannelId}
+        ) already
+    </select>
+
+    <select id="selectCheckInList" parameterType="HashMap" resultType="HashMap">
+        SELECT
+        <![CDATA[
+            *
+        FROM
+        (
+            SELECT
+                u.discord_id  AS discord_id,
+                COUNT(ci.user_id) AS check_count
+            FROM
+                check_in ci , users u
+            WHERE ci.user_id = u.user_id
+            AND ci.discord_channel_id = #{discordChannelId}
+            GROUP BY ci.user_id
+        ) AS check_in_list
+        WHERE
+            check_count >= #{conditionCount}
+        ]]>
+    </select>
+    
+    <select id="selectCheckInDateByDiscordChannelIdAndDiscordId" parameterType="HashMap" resultType="HashMap">
+        SELECT
+            DATE_FORMAT(check_in_date, '%Y-%m-%d %H:%i:%s') AS check_id_date
+        FROM
+            check_in ci
+        WHERE
+            user_id =
+                (
+                SELECT
+                    user_id
+                FROM
+                    users
+                WHERE
+                    discord_id = #{discordId}
+                )
+        AND
+        discord_channel_id = #{discordChannelId}
+    </select>
+
+    <insert id="checkInUser" parameterType="com.boomlabs.checkapp.model.CheckIn" >
+        INSERT INTO check_in (
+            user_id,
+            discord_channel_id,
+            check_in_date
+        ) VALUES (
+            #{userId},
+            #{discordChannelId},
+            #{checkInDate}
+        )
+    </insert>
+
+    <insert id="registerUser" parameterType="com.boomlabs.checkapp.model.User" >
+        INSERT INTO users (
+            discord_id,
+            user_address,
+            discord_channel_id
+        ) VALUES (
+            #{discordId},
+            #{userAddress},
+            #{discordChannelId}
+        )
+    </insert>
+
+    <update id="updateUserAddress" parameterType="com.boomlabs.checkapp.model.User" >
+        UPDATE users
+        SET user_address = #{userAddress}
+        WHERE discord_id = #{discordId}
+        AND discord_channel_id = #{discordChannelId}
+    </update>
+
+</mapper>

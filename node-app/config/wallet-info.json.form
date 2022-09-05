@@ -1,0 +1,14 @@
+{
+    "contractAddress" : "",
+    "fromAddress" : "",
+    "privateKey" : "",
+    "alchemy" : {
+        "API_KEY" : "",
+        "HTTPS" : "",
+        "WEBSOCKETS" : ""
+    },
+    "goerli" : {
+        "meta-rpc" : "",
+        "doc-rpc" : ""
+    }
+}
